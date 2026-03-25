@@ -1,29 +1,19 @@
 import React, { useState } from 'react';
 import { X, Trophy, FastForward, PlayCircle, CheckCircle } from 'lucide-react';
+import { parseModuleTasks } from '../lib/habitEngine';
+import { useHabitStore } from '../lib/store';
 
-const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, task, onFinish }) => {
-  const [speed, setSpeed] = useState(1); // 1 = normal, 2 = fast, 3 = super fast
+const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, task, onFinish, energyLevel = 50 }) => {
   const [completedBeads, setCompletedBeads] = useState([]);
+  const { addSessionToHistory } = useHabitStore();
+
+  const speed = energyLevel < 35 ? 1 : energyLevel < 75 ? 2 : 3;
 
   if (!isOpen) return null;
 
   const isHighFriction = frictionScore >= 7;
 
-  // Specific Subtask Names based on context
-  const getSubtasks = () => {
-    if (isHighFriction) {
-      return [{ id: 0, title: 'Micro-Review of Core Principles', duration: '10m' }];
-    }
-    return [
-      { id: 0, title: 'Warm-up & Concept Review', duration: '10m' },
-      { id: 1, title: 'Practical Implementation', duration: '20m' },
-      { id: 2, title: 'Debugging & Refinement', duration: '15m' },
-      { id: 3, title: 'Peer Code Review', duration: '10m' },
-      { id: 4, title: 'Final Documentation', duration: '5m' }
-    ];
-  };
-
-  const beads = getSubtasks();
+  const beads = parseModuleTasks(task?.title || 'Daily Session', isHighFriction);
   const taskCount = beads.length;
   
   // Calculate completion percentage manually
@@ -79,19 +69,11 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
           </div>
         </div>
 
-        {/* Speed Controls (Demo purposes for Developer A) */}
+        {/* Speed Indication */}
         <div className="flex gap-4 mt-6">
-          {[1, 2, 3].map(v => (
-            <button 
-              key={v}
-              onClick={() => setSpeed(v)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-sm transition-colors ${
-                speed === v ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.5)]' : 'bg-white/5 text-white/40 hover:bg-white/10'
-              }`}
-            >
-              <FastForward size={14} /> {v}x Flow
-            </button>
-          ))}
+          <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-sm bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+            <FastForward size={14} /> {speed}x Flow Automatically Activated
+          </div>
         </div>
 
         {/* Timeline "Beads on a String" */}
@@ -134,7 +116,17 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
         {/* Footer / Completion */}
         <div className="w-full p-8 border-t border-white/5 bg-white/[0.01] flex justify-center mt-auto">
           <button 
-            onClick={onFinish}
+            onClick={() => {
+              addSessionToHistory({
+                pathway: activePathway?.title || 'Uncategorized',
+                taskTitle: task?.moduleTitle || task?.title || 'Daily Session',
+                timeSpent: `${Math.round(beads.reduce((acc, curr) => acc + parseInt(curr.duration.replace('m', '')), 0) / speed)}m`,
+                completedSubtasks: completedBeads.length,
+                type: task?.id?.toLowerCase() || 'flame',
+                speed: speed
+              });
+              onFinish();
+            }}
             disabled={progress < 100}
             className={`px-12 py-5 rounded-2xl font-black text-xl uppercase tracking-widest flex items-center gap-3 transition-all ${
               progress >= 100 

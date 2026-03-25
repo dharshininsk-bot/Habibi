@@ -26,6 +26,21 @@ export const TASK_LEVELS = {
   }
 };
 
+export const SYLLABUS = [
+  "Introduction & Core Concepts",
+  "Environment Setup & Tools",
+  "Basic Architecture & Flow",
+  "Data Models & Structures",
+  "Primary Implementation Phase",
+  "Advanced Logic & Edge Cases",
+  "Integration & State Management",
+  "Performance Optimization",
+  "Testing & Quality Assurance",
+  "UI/UX Refinement",
+  "Security & Deployment",
+  "Final Project & Review"
+];
+
 /**
  * frictionScore = Inactivity + Skips + Incomplete Sessions
  */
@@ -37,7 +52,10 @@ export function calculateFrictionScore(inactivityDays, skips, incompleteSessions
 /**
  * Logic to adjust task complexity based on energy level
  */
-export function calculateDailyTask(frictionScore, energyLevel, pathwayDifficulty = 2) {
+export function calculateDailyTask(frictionScore, energyLevel, completedCount = 0) {
+  const moduleIndex = Math.min(SYLLABUS.length - 1, completedCount);
+  const moduleTitle = SYLLABUS[moduleIndex];
+
   // Determine Task Base (Title & Color) based on Energy Level
   let taskBase;
   if (energyLevel <= 30) {
@@ -74,6 +92,7 @@ export function calculateDailyTask(frictionScore, energyLevel, pathwayDifficulty
 
   return {
     ...taskBase,
+    moduleTitle,
     duration,
     reasoning
   };
@@ -95,4 +114,28 @@ export function calculateNextMomentum(prevMomentum, isSuccess, energyLevel, fric
   } else {
     return prevMomentum * (1 - DECAY_RATE);
   }
+}
+
+/**
+ * Parser that breaks a module into 10-minute subtasks
+ * and feeds them based on friction score.
+ */
+export function parseModuleTasks(moduleTitle, isHighFriction) {
+  if (isHighFriction) {
+    // High Friction State: UI collapses complex tasks into a single 10-minute Micro-Subtask ("Spark").
+    return [{ 
+      id: 0, 
+      title: `Micro-Spark: ${moduleTitle} Review`, 
+      duration: '10m' 
+    }];
+  }
+  
+  // Low Friction State: UI expands the space fully, showing 5-6 subtasks.
+  return [
+    { id: 0, title: `${moduleTitle} Warm-up`, duration: '10m' },
+    { id: 1, title: 'Deep dive & Core Concept', duration: '20m' },
+    { id: 2, title: 'Practical Implementation', duration: '15m' },
+    { id: 3, title: 'Refinement & Debugging', duration: '10m' },
+    { id: 4, title: 'Final Documentation', duration: '5m' }
+  ];
 }

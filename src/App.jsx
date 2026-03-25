@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { History } from 'lucide-react';
 import DiscoveryFeed from './components/DiscoveryFeed';
 import DailyFocusCard from './components/DailyFocusCard';
-import EmpathyBuddy from './components/EmpathyBuddy';
+import RightPanelTabs from './components/RightPanelTabs';
 import RecoveryGraph from './components/RecoveryGraph';
 import MiniGallery from './components/MiniGallery';
 import FloatingActionButton from './components/FloatingActionButton'; // Kept as fall-back or removed depending on feel
@@ -13,6 +13,7 @@ import DailySpaceDashboard from './components/DailySpaceModal';
 import UploadPromptModal from './components/UploadPromptModal';
 import CourseHistoryModal from './components/CourseHistoryModal';
 import { calculateDailyTask, calculateFrictionScore } from './lib/habitEngine';
+import { useHabitStore } from './lib/store';
 import './index.css';
 
 const App = () => {
@@ -24,14 +25,21 @@ const App = () => {
   const [energyLevel, setEnergyLevel] = useState(80);
   const [frictionData, setFrictionData] = useState({ inactivity: 1, skips: 2, incomplete: 1 });
 
+  const { history } = useHabitStore();
+
   const frictionScore = useMemo(() => 
     calculateFrictionScore(frictionData.inactivity, frictionData.skips, frictionData.incomplete),
     [frictionData]
   );
 
+  const completedCountForActive = useMemo(() => {
+    if (!activePathway) return 0;
+    return history.filter(h => h.pathway === activePathway.title).length;
+  }, [history, activePathway]);
+
   const currentTask = useMemo(() => 
-    calculateDailyTask(frictionScore, energyLevel, 3), 
-    [frictionScore, energyLevel]
+    calculateDailyTask(frictionScore, energyLevel, completedCountForActive), 
+    [frictionScore, energyLevel, completedCountForActive]
   );
 
   const momentumData = [
@@ -58,6 +66,7 @@ const App = () => {
           isOpen={isDailySpaceOpen} 
           onClose={() => setIsDailySpaceOpen(false)} 
           frictionScore={frictionScore} 
+          energyLevel={energyLevel}
           activePathway={activePathway} 
           task={currentTask}
           onFinish={() => {
@@ -122,15 +131,14 @@ const App = () => {
                   <RecoveryGraph data={momentumData} />
                 </div>
                 <div className="lg:col-span-4 h-full flex flex-col gap-4">
-                   <div className="space-y-4">
-                     <EmpathyBuddy energyLevel={energyLevel} frictionScore={frictionScore} />
-                     <div className="grid grid-cols-1 gap-4">
+                   <div className="lg:col-span-4 sticky top-28 h-fit">
+                   <RightPanelTabs energyLevel={energyLevel} frictionScore={frictionScore} activePathway={activePathway} />
+                </div>     <div className="grid grid-cols-1 gap-4">
                        <LiveParticipants />
                        <SelfCompassionTip />
                      </div>
                    </div>
                 </div>
-              </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-8 space-y-10">

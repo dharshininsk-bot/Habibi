@@ -1,21 +1,18 @@
 import React from 'react';
 import { X, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react';
+import { useHabitStore } from '../lib/store';
+import { SYLLABUS } from '../lib/habitEngine';
 
 const CourseHistoryModal = ({ isOpen, onClose, activePathway }) => {
+  const { history, badges } = useHabitStore();
   if (!isOpen) return null;
 
-  const mockHistory = [
-    { id: 1, date: 'Mar 24', pathway: 'Bodyweight Mastery', taskTitle: 'Advanced Pushup Progressions', timeSpent: '45m', completedSubtasks: 5 },
-    { id: 2, date: 'Mar 23', pathway: 'Bodyweight Mastery', taskTitle: 'Core Warm-up', timeSpent: '10m', completedSubtasks: 1, type: 'spark' },
-    { id: 3, date: 'Mar 21', pathway: 'Unity Fundamentals', taskTitle: 'Physics Engine Basics', timeSpent: '60m', completedSubtasks: 6 },
-    { id: 4, date: 'Mar 19', pathway: 'Unity Fundamentals', taskTitle: 'Camera Tracking & Transforms', timeSpent: '60m', completedSubtasks: 6 },
-    { id: 5, date: 'Mar 18', pathway: 'Python for Data Science', taskTitle: 'Variables & Data Types', timeSpent: '45m', completedSubtasks: 5 },
-    { id: 6, date: 'Mar 17', pathway: 'Python for Data Science', taskTitle: 'Hello World & Setup', timeSpent: '10m', completedSubtasks: 1, type: 'spark' },
-  ];
-
   const filteredHistory = activePathway 
-    ? mockHistory.filter(item => item.pathway === activePathway.title)
-    : mockHistory;
+    ? history.filter(item => item.pathway === activePathway.title)
+    : history;
+
+  const completedModuleTitles = filteredHistory.map(h => h.taskTitle);
+  const completedCount = SYLLABUS.filter(m => completedModuleTitles.includes(m)).length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -36,7 +33,12 @@ const CourseHistoryModal = ({ isOpen, onClose, activePathway }) => {
             </div>
             <div>
               <h2 className="text-xl font-sora font-extrabold text-white">Course History</h2>
-              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Your past momentum</p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Your past momentum</p>
+                {badges.includes('Speed Demon') && (
+                  <span className="text-[8px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 font-bold uppercase tracking-wider border border-orange-500/20">Speed Demon Badge</span>
+                )}
+              </div>
             </div>
           </div>
           <button 
@@ -49,6 +51,32 @@ const CourseHistoryModal = ({ isOpen, onClose, activePathway }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+          
+          {/* Syllabus Checklist */}
+          {activePathway && (
+            <div className="mb-6 p-5 glass rounded-2xl border border-white/10 bg-white/[0.03]">
+              <h3 className="text-sm font-bold text-white mb-4 border-b border-white/5 pb-2">Module Checklist</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {SYLLABUS.map((module, index) => {
+                  const isCompleted = completedModuleTitles.includes(module);
+                  return (
+                    <div key={index} className="flex items-center gap-3 group">
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${isCompleted ? 'bg-green-500 border-green-400 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'border-white/10 bg-white/5'}`}>
+                        {isCompleted && <CheckCircle2 size={12} className="text-white" />}
+                      </div>
+                      <span className={`text-[11px] font-medium transition-colors ${isCompleted ? 'text-white' : 'text-white/30'}`}>
+                        <span className="text-[9px] opacity-30 mr-1.5 font-bold">0{index + 1}</span>
+                        {module}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-2 px-2">Session Timeline</h3>
+
           {filteredHistory.length === 0 && (
             <div className="text-center py-6 text-white/50 text-sm font-bold">
               No history found for {activePathway?.title}.

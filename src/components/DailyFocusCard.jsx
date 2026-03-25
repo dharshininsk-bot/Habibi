@@ -73,7 +73,7 @@ const DailyFocusCard = ({ task, energyLevel, frictionScore, onStart, activePathw
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">{activePathway?.title}</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-extrabold font-sora tracking-tighter mb-6 leading-none">{task.title}</h1>
+            <h1 className="text-5xl md:text-7xl font-extrabold font-sora tracking-tighter mb-6 leading-none">{task.moduleTitle || task.title}</h1>
             
             <p className="text-xl text-slate-400 font-medium mb-12 italic leading-relaxed opacity-80 max-w-xl">
               "{task.reasoning}"
