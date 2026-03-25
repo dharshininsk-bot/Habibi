@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { History } from 'lucide-react';
 import DiscoveryFeed from './components/DiscoveryFeed';
 import DailyFocusCard from './components/DailyFocusCard';
 import EmpathyBuddy from './components/EmpathyBuddy';
@@ -8,12 +9,18 @@ import FloatingActionButton from './components/FloatingActionButton'; // Kept as
 import PathwayBuilderModal from './components/PathwayBuilderModal';
 import LiveParticipants from './components/LiveParticipants';
 import SelfCompassionTip from './components/SelfCompassionTip';
+import DailySpaceDashboard from './components/DailySpaceModal';
+import UploadPromptModal from './components/UploadPromptModal';
+import CourseHistoryModal from './components/CourseHistoryModal';
 import { calculateDailyTask, calculateFrictionScore } from './lib/habitEngine';
 import './index.css';
 
 const App = () => {
   const [activePathway, setActivePathway] = useState(null);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [isDailySpaceOpen, setIsDailySpaceOpen] = useState(false);
+  const [isUploadPromptOpen, setIsUploadPromptOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [energyLevel, setEnergyLevel] = useState(80);
   const [frictionData, setFrictionData] = useState({ inactivity: 1, skips: 2, incomplete: 1 });
 
@@ -44,6 +51,28 @@ const App = () => {
     { day: 6, energy: 95, level: 3, imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=400&auto=format&fit=crop' },
   ];
 
+  if (isDailySpaceOpen) {
+    return (
+      <React.Fragment>
+        <DailySpaceDashboard 
+          isOpen={isDailySpaceOpen} 
+          onClose={() => setIsDailySpaceOpen(false)} 
+          frictionScore={frictionScore} 
+          activePathway={activePathway} 
+          task={currentTask}
+          onFinish={() => {
+            setIsDailySpaceOpen(false);
+            setIsUploadPromptOpen(true);
+          }}
+        />
+        <UploadPromptModal 
+          isOpen={isUploadPromptOpen} 
+          onClose={() => setIsUploadPromptOpen(false)} 
+        />
+      </React.Fragment>
+    );
+  }
+
   return (
     <div className="midnight-gradient min-h-screen text-white font-inter">
       <div className="max-w-5xl mx-auto px-6 w-full flex flex-col min-h-screen">
@@ -58,7 +87,16 @@ const App = () => {
             <span className="font-sora font-extrabold text-2xl tracking-tighter">Habibi</span>
           </div>
 
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-6">
+            {activePathway && (
+              <button 
+                onClick={() => setIsHistoryOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 text-white font-black rounded-xl hover:bg-white/10 active:scale-95 transition-all shadow-inner animate-in fade-in zoom-in"
+              >
+                <History size={16} strokeWidth={2.5} />
+                <span className="text-[10px] uppercase tracking-widest hidden sm:inline text-white/70">Course History</span>
+              </button>
+            )}
             <div className="w-10 h-10 rounded-full glass border-white/10 flex items-center justify-center font-bold text-[10px] text-white/40 shadow-inner">UA</div>
           </div>
         </nav>
@@ -79,7 +117,7 @@ const App = () => {
                     frictionScore={frictionScore}
                     activePathway={activePathway}
                     onEnergyChange={setEnergyLevel}
-                    onStart={() => alert("Session Ignited!")}
+                    onStart={() => setIsDailySpaceOpen(true)}
                   />
                   <RecoveryGraph data={momentumData} />
                 </div>
@@ -104,7 +142,16 @@ const App = () => {
         </main>
       </div>
 
-      <PathwayBuilderModal isOpen={isBuilderOpen} onClose={() => setIsBuilderOpen(false)} />
+      <UploadPromptModal 
+        isOpen={isUploadPromptOpen} 
+        onClose={() => setIsUploadPromptOpen(false)} 
+      />
+      
+      <CourseHistoryModal 
+        isOpen={isHistoryOpen} 
+        onClose={() => setIsHistoryOpen(false)} 
+        activePathway={activePathway}
+      />
     </div>
   );
 };
