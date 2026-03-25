@@ -9,15 +9,36 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+const getColorByState = (state) => {
+  if (state === 'progress') return '#10b981'; // emerald
+  if (state === 'disengagement') return '#f43f5e'; // rose
+  if (state === 'recovery') return '#a855f7'; // purple
+  return '#3b82f6'; // default blue
+};
+
+const CustomizedDot = (props) => {
+  const { cx, cy, payload, r = 4 } = props;
+  const color = getColorByState(payload.state);
+  return (
+    <circle 
+      cx={cx} cy={cy} r={r} 
+      stroke="#0f172a" strokeWidth={2} 
+      fill={color} 
+      style={{ filter: `drop-shadow(0 0 4px ${color})` }} 
+    />
+  );
+};
+
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    const color = getColorByState(data.state);
     return (
       <div className="bg-[#0f172a]/95 backdrop-blur-md border border-white/10 px-3 py-2 rounded-xl shadow-2xl">
         <div className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{data.date}</div>
-        <div className="flex items-center gap-2 mt-0.5">
-          <div className="text-xl font-black text-blue-400 font-sora">{Math.round(data.momentum)}</div>
-          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Momentum</div>
+        <div className="flex items-center gap-2 mt-0.5" style={{ color }}>
+          <div className="text-xl font-black font-sora">{Math.round(data.momentum)}</div>
+          <div className="text-[10px] uppercase font-bold tracking-widest leading-none">{data.state || 'Momentum'}</div>
         </div>
       </div>
     );
@@ -28,33 +49,43 @@ const CustomTooltip = ({ active, payload }) => {
 const RecoveryGraph = ({ data }) => {
   return (
     <div className="glass-card border-white/5 bg-white/[0.02]">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-xl font-extrabold font-sora text-white">Recovery Pulse</h2>
           <p className="text-[9px] text-slate-500 uppercase font-black tracking-[0.2em] mt-1.5 opacity-60">
             Holographic Projection Phase
           </p>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-            <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Personal</span>
+            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Progress</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
-            <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Collective</span>
+            <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+            <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Disengagement</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+            <span className="text-[9px] font-black uppercase text-slate-500 tracking-tighter">Recovery</span>
           </div>
         </div>
       </div>
 
-      {/* FIXED HEIGHT CONTAINER FOR RECHARTS */}
-      <div className="h-48 w-full mt-6 opacity-80" style={{ minHeight: '200px' }}>
+      <div className="h-48 w-full mt-6" style={{ minHeight: '200px' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
+              <linearGradient id="colorMomentum" x1="0" y1="0" x2="100%" y2="0">
+                {data.map((d, index) => {
+                  const offset = `${(index / (data.length - 1)) * 100}%`;
+                  const color = getColorByState(d.state);
+                  return <stop key={index} offset={offset} stopColor={color} />;
+                })}
+              </linearGradient>
               <linearGradient id="glowMomentum" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.25}/>
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0}/>
+                <stop offset="0%" stopColor="#475569" stopOpacity={0.15}/>
+                <stop offset="100%" stopColor="#475569" stopOpacity={0}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="5 5" vertical={false} stroke="rgba(255,255,255,0.03)" />
@@ -68,12 +99,12 @@ const RecoveryGraph = ({ data }) => {
             <YAxis 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
-              domain={[0, 100]}
+              domain={['dataMin - 10', 'dataMax + 10']}
               hide
             />
             <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
             
+            {/* Collective dotted line removed or faded? We'll leave it as back ground context */}
             <Area 
               type="monotone" 
               dataKey="collective" 
@@ -86,12 +117,13 @@ const RecoveryGraph = ({ data }) => {
             <Area 
               type="monotone" 
               dataKey="momentum" 
-              stroke="#3b82f6" 
+              stroke="url(#colorMomentum)" 
               strokeWidth={3}
               fillOpacity={1} 
               fill="url(#glowMomentum)" 
               animationDuration={2500}
-              className="drop-shadow-[0_0_10px_rgba(59,130,246,0.4)]"
+              dot={<CustomizedDot />}
+              activeDot={<CustomizedDot r={7} />}
             />
           </AreaChart>
         </ResponsiveContainer>

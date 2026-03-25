@@ -1,10 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Camera, Image as ImageIcon, X, Upload } from 'lucide-react';
+import { useHabitStore } from '../lib/store';
 
 const UploadPromptModal = ({ isOpen, onClose }) => {
   const [dragActive, setDragActive] = useState(false);
+  const { addGalleryEntry } = useHabitStore();
+  const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
+
+  const handleFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      const imageUrl = URL.createObjectURL(file);
+      addGalleryEntry({ energy: 100, level: 3, imageUrl });
+      onClose();
+    }
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -35,10 +60,17 @@ const UploadPromptModal = ({ isOpen, onClose }) => {
             dragActive ? 'border-purple-400 bg-purple-500/10' : 'border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10'
           }`}
           onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-          onDragLeave={() => setDragActive(false)}
-          onDrop={(e) => { e.preventDefault(); setDragActive(false); alert('File dropped! (Dev B will handle upload logic)'); }}
-          onClick={() => alert('Trigger File Picker (Dev A Mock)')}
+          onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+          onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
         >
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            className="hidden" 
+            accept="image/*" 
+          />
           <div className="flex gap-4 text-white/30 group-hover:text-white/60 transition-colors">
             <ImageIcon size={32} />
             <Upload size={32} />

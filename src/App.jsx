@@ -25,7 +25,7 @@ const App = () => {
   const [energyLevel, setEnergyLevel] = useState(80);
   const [frictionData, setFrictionData] = useState({ inactivity: 1, skips: 2, incomplete: 1 });
 
-  const { history } = useHabitStore();
+  const { history, galleryEntries } = useHabitStore();
 
   const frictionScore = useMemo(() => 
     calculateFrictionScore(frictionData.inactivity, frictionData.skips, frictionData.incomplete),
@@ -42,22 +42,43 @@ const App = () => {
     [frictionScore, energyLevel, completedCountForActive]
   );
 
-  const momentumData = [
-    { date: 'Mon', momentum: 40, collective: 60 },
-    { date: 'Tue', momentum: 45, collective: 62 },
-    { date: 'Wed', momentum: 55, collective: 65 },
-    { date: 'Thu', momentum: 70, collective: 68 },
-    { date: 'Fri', momentum: 85, collective: 70 },
-    { date: 'Sat', momentum: 75, collective: 72 },
-    { date: 'Sun', momentum: 90, collective: 75, isRecovering: true },
-  ];
+  const momentumData = useMemo(() => {
+    // Calculate a dynamic momentum score for 'Today' based on history completions
+    const baseMomentumToday = 70;
+    const dynamicMomentum = Math.min(100, baseMomentumToday + (history.length * 5));
 
-  const galleryEntries = [
-    { day: 1, energy: 90, level: 3, imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=400&auto=format&fit=crop' },
-    { day: 2, energy: 85, level: 2, imageUrl: 'https://images.unsplash.com/photo-1460518451285-cd7ba71ba4c8?q=80&w=400&auto=format&fit=crop' },
-    { day: 5, energy: 70, level: 2, imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop' },
-    { day: 6, energy: 95, level: 3, imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=400&auto=format&fit=crop' },
-  ];
+    const rawData = [
+      { date: 'Mon', momentum: 40, collective: 60 },
+      { date: 'Tue', momentum: 45, collective: 62 },
+      { date: 'Wed', momentum: 55, collective: 65 },
+      { date: 'Thu', momentum: 70, collective: 68 },
+      { date: 'Fri', momentum: 85, collective: 70 },
+      { date: 'Sat', momentum: 60, collective: 72 }, // deliberate drop to show disengagement
+      { date: 'Today', momentum: dynamicMomentum, collective: 75 },
+    ];
+
+    let lastState = 'progress';
+    return rawData.map((d, i) => {
+      if (i === 0) return { ...d, state: 'progress' };
+      const prev = rawData[i - 1];
+      let state = 'progress';
+      
+      if (d.momentum < prev.momentum) {
+        state = 'disengagement';
+      } else if (d.momentum > prev.momentum && lastState === 'disengagement') {
+        state = 'recovery';
+      } else if (d.momentum > prev.momentum && prev.momentum < rawData[Math.max(0, i - 2)].momentum) {
+        state = 'recovery';
+      } else {
+        state = 'progress';
+      }
+      
+      lastState = state;
+      return { ...d, state };
+    });
+  }, [history]);
+
+
 
   if (isDailySpaceOpen) {
     return (
@@ -142,7 +163,10 @@ const App = () => {
               
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-8 space-y-10">
-                  <MiniGallery entries={galleryEntries} />
+                  <MiniGallery 
+                    entries={galleryEntries} 
+                    onAdd={() => setIsUploadPromptOpen(true)} 
+                  />
                 </div>
               </div>
             </div>

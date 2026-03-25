@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image as ImageIcon, Plus } from 'lucide-react';
 
-const MiniGallery = ({ entries }) => {
+const MiniGallery = ({ entries, onAdd }) => {
   return (
     <div className="glass-card border-white/5 bg-white/[0.01]">
       <div className="flex items-center justify-between mb-8">
@@ -51,7 +51,10 @@ const MiniGallery = ({ entries }) => {
         ))}
         
         {/* Placeholder Polaroid */}
-        <div className="tapestry-item w-40 aspect-[4/5] flex items-center justify-center rounded-3xl border-2 border-dashed border-white/5 bg-white/[0.02] text-slate-800 hover:border-white/20 hover:text-slate-500 transition-all cursor-pointer group">
+        <div 
+          onClick={onAdd}
+          className="tapestry-item w-40 aspect-[4/5] flex items-center justify-center rounded-3xl border-2 border-dashed border-white/5 bg-white/[0.02] text-slate-800 hover:border-white/20 hover:text-slate-500 transition-all cursor-pointer group"
+        >
            <Plus size={32} className="group-hover:rotate-90 transition-transform duration-500" />
         </div>
       </div>

@@ -20,6 +20,20 @@ export const HabitProvider = ({ children }) => {
     { id: 3, name: "Charlie", avatar: "https://i.pravatar.cc/100?u=18" }
   ]);
 
+  const [galleryEntries, setGalleryEntries] = useState([
+    { id: 1, day: 1, energy: 90, level: 3, imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=400&auto=format&fit=crop' },
+    { id: 2, day: 2, energy: 85, level: 2, imageUrl: 'https://images.unsplash.com/photo-1460518451285-cd7ba71ba4c8?q=80&w=400&auto=format&fit=crop' },
+    { id: 3, day: 5, energy: 70, level: 2, imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop' },
+    { id: 4, day: 6, energy: 95, level: 3, imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=400&auto=format&fit=crop' },
+  ]);
+
+  const addGalleryEntry = (entry) => {
+    setGalleryEntries(prev => [
+      ...prev,
+      { id: Date.now(), day: prev.length > 0 ? prev[prev.length - 1].day + 1 : 1, ...entry }
+    ]);
+  };
+
   const addSessionToHistory = (session) => {
     setHistory(prev => [
       { id: Date.now(), date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), ...session },
@@ -47,7 +61,9 @@ export const HabitProvider = ({ children }) => {
       learningSpeed,
       recoverySpeed,
       activeUsers,
-      addSessionToHistory
+      addSessionToHistory,
+      galleryEntries,
+      addGalleryEntry
     }}>
       {children}
     </HabitContext.Provider>
