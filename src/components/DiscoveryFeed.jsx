@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, LayoutGrid, Dumbbell, Palette, Code2, ChefHat, Plus } from 'lucide-react';
 import PathwayCard from './PathwayCard';
+import { useHabitStore } from '../lib/store';
 
 const CATEGORIES = [
   { id: 'all', name: 'All', icon: LayoutGrid },
@@ -10,73 +11,11 @@ const CATEGORIES = [
   { id: 'cooking', name: 'Cooking', icon: ChefHat },
 ];
 
-const MOCK_PATHWAYS = [
-  {
-    id: 'unity-basics',
-    title: 'Unity Fundamentals',
-    category: 'coding',
-    creator: 'DevXavier',
-    activeCount: 450,
-    enrolled: '12.4k',
-    difficulty: 'Intermediate',
-    thumbnail: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 'oil-painting',
-    title: 'Traditional Oil Painting',
-    category: 'art',
-    creator: 'ArtistSola',
-    activeCount: 120,
-    enrolled: '3.1k',
-    difficulty: 'Beginner',
-    thumbnail: 'https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 'bodyweight-pro',
-    title: 'Bodyweight Mastery',
-    category: 'fitness',
-    creator: 'FitCoach',
-    activeCount: 890,
-    enrolled: '25k',
-    difficulty: 'Advanced',
-    thumbnail: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 'sourdough',
-    title: 'The Sourdough Journey',
-    category: 'cooking',
-    creator: 'BakerBen',
-    activeCount: 304,
-    enrolled: '8k',
-    difficulty: 'Beginner',
-    thumbnail: 'https://images.unsplash.com/photo-1585478259715-876a6a81fc08?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 'ui-motion',
-    title: 'UI Motion & Animation',
-    category: 'art',
-    creator: 'DesignDua',
-    activeCount: 56,
-    enrolled: '1.2k',
-    difficulty: 'Intermediate',
-    thumbnail: 'https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 'python-data',
-    title: 'Python for Data Science',
-    category: 'coding',
-    creator: 'DataWiz',
-    activeCount: 220,
-    enrolled: '15k',
-    difficulty: 'Beginner',
-    thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop'
-  }
-];
-
 const DiscoveryFeed = ({ onPathwaySelect, onCreateNew }) => {
+  const { pathways } = useHabitStore();
   const [activeCategory, setActiveCategory] = useState('all');
 
-  const filteredPathways = MOCK_PATHWAYS.filter(p => 
+  const filteredPathways = (pathways || []).filter(p => 
     activeCategory === 'all' || p.category === activeCategory
   );
 

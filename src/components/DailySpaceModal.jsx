@@ -13,13 +13,20 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
 
   const isHighFriction = frictionScore >= 7;
 
-  const beads = parseModuleTasks(task?.title || 'Daily Session', isHighFriction);
+  // Use the refined parseModuleTasks with activePathway and sessionDuration
+  const beads = parseModuleTasks(task?.title || 'Daily Session', isHighFriction, activePathway, task?.duration || 30);
   const taskCount = beads.length;
   
   // Calculate completion percentage manually
   const progress = taskCount > 0 ? Math.round((completedBeads.length / taskCount) * 100) : 0;
 
   const handleBeadClick = (id) => {
+    // Sequential Completion: One cannot mark the next subtopic as completed without completing the previous one
+    const beadIndex = beads.findIndex(b => b.id === id);
+    if (beadIndex > 0 && !completedBeads.includes(beads[beadIndex - 1].id)) {
+      return alert("Complete the previous subtopic first!");
+    }
+
     setCompletedBeads(prev => 
       prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
     );
@@ -119,6 +126,7 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
             onClick={() => {
               addSessionToHistory({
                 pathway: activePathway?.title || 'Uncategorized',
+                pathwayCreator: activePathway?.creator || 'Anonymous',
                 taskTitle: task?.moduleTitle || task?.title || 'Daily Session',
                 timeSpent: `${Math.round(beads.reduce((acc, curr) => acc + parseInt(curr.duration.replace('m', '')), 0) / speed)}m`,
                 completedSubtasks: completedBeads.length,

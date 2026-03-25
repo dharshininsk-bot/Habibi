@@ -38,8 +38,8 @@ const App = () => {
   }, [history, activePathway]);
 
   const currentTask = useMemo(() => 
-    calculateDailyTask(frictionScore, energyLevel, completedCountForActive), 
-    [frictionScore, energyLevel, completedCountForActive]
+    calculateDailyTask(frictionScore, energyLevel, completedCountForActive, activePathway), 
+    [frictionScore, energyLevel, completedCountForActive, activePathway]
   );
 
   const momentumData = useMemo(() => {
@@ -183,6 +183,11 @@ const App = () => {
         isOpen={isHistoryOpen} 
         onClose={() => setIsHistoryOpen(false)} 
         activePathway={activePathway}
+      />
+
+      <PathwayBuilderModal 
+        isOpen={isBuilderOpen} 
+        onClose={() => setIsBuilderOpen(false)} 
       />
     </div>
   );
