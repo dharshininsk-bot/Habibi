@@ -128,38 +128,63 @@ export function calculateNextMomentum(prevMomentum, isSuccess, energyLevel, fric
  * Parser that breaks a module into subtasks
  * and feeds them based on energy/speed and current progress.
  */
-/**
- * Parser that breaks a module into 5 proportional subtasks
- * to ensure a consistent rhythm ("beads on a string") 
- * across any session duration.
- */
-export function parseModuleTasks(moduleTitle, isHighFriction, activePathway = null, sessionDuration = 30) {
-  // We always show 5 beads to maintain the "Habibi" rhythm
-  // Fractions of the total session time
-  const proportions = [0.15, 0.35, 0.25, 0.15, 0.10]; 
-  const labels = [
-    `${moduleTitle} Warm-up`,
-    'Deep Dive & Focus',
-    'Practical Application',
-    'Refinement / Polish',
-    'Session Review'
-  ];
+export function parseModuleTasks(moduleTitle, isHighFriction, activePathway = null, sessionDuration = 30, offset = 0) {
+  let sourceSubtopics = [];
+  if (activePathway?.subtopics?.length > 0) {
+    sourceSubtopics = activePathway.subtopics;
+  } else {
+    // Default mock subtopics if none provided
+    sourceSubtopics = [
+      { title: `${moduleTitle} Warm-up`, duration: 10 },
+      { title: 'Deep dive & Core Concept', duration: 20 },
+      { title: 'Practical Implementation', duration: 15 },
+      { title: 'Refinement & Debugging', duration: 10 },
+      { title: 'Final Documentation', duration: 5 }
+    ];
+  }
+
+  // Handle offset: Start from the first uncompleted subtopic
+  const remainingSubtopics = sourceSubtopics.slice(offset);
 
   if (isHighFriction) {
-    // High Friction State: Still show 3 beads but keep them tiny
+    // High Friction State: UI collapses complex tasks into a single Micro-Task ("Spark").
     return [
       { id: 0, title: `Spark: Breath & Entry`, duration: '2m' },
-      { id: 1, title: `Micro-Task: ${moduleTitle}`, duration: '6m' },
+      { id: 1, title: `Micro-Task: ${remainingSubtopics[0]?.title || moduleTitle}`, duration: '6m' },
       { id: 2, title: `Quick Close`, duration: '2m' }
     ];
   }
   
-  return proportions.map((pct, i) => {
-    const mins = Math.max(1, Math.round(sessionDuration * pct));
-    return {
-      id: i,
-      title: labels[i],
-      duration: `${mins}m`
-    };
-  });
+  // Sum up topics according to session timing
+  let totalTime = 0;
+  let assignedSubtopics = [];
+  
+  for (let i = 0; i < remainingSubtopics.length; i++) {
+    const sub = remainingSubtopics[i];
+    const subDuration = typeof sub.duration === 'string' ? parseInt(sub.duration.replace('m','')) : sub.duration;
+    
+    if (totalTime + subDuration <= sessionDuration) {
+      assignedSubtopics.push({
+        id: i,
+        title: sub.title,
+        duration: `${subDuration}m`
+      });
+      totalTime += subDuration;
+    } else {
+      break;
+    }
+  }
+
+  // Ensure at least one subtopic is assigned if possible
+  if (assignedSubtopics.length === 0 && remainingSubtopics.length > 0) {
+    const firstSub = remainingSubtopics[0];
+    const subDuration = typeof firstSub.duration === 'string' ? parseInt(firstSub.duration.replace('m','')) : firstSub.duration;
+    assignedSubtopics.push({
+      id: 0,
+      title: firstSub.title,
+      duration: `${subDuration}m`
+    });
+  }
+
+  return assignedSubtopics;
 }

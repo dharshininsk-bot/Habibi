@@ -133,9 +133,10 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
             onClick={() => {
               addSessionToHistory({
                 pathway: activePathway?.title || 'Uncategorized',
+                pathwayId: activePathway?.id,
                 pathwayCreator: activePathway?.creator || 'Anonymous',
                 taskTitle: task?.moduleTitle || task?.title || 'Daily Session',
-                timeSpent: `${Math.round(beads.reduce((acc, curr) => acc + parseInt(curr.duration.replace('m', '')), 0) / speed)}m`,
+                duration: `${Math.round(beads.reduce((acc, curr) => acc + parseInt(curr.duration.replace('m', '')), 0) / speed)}m`,
                 completedSubtasks: completedBeads.length,
                 type: task?.id?.toLowerCase() || 'flame',
                 speed: speed
@@ -150,7 +151,7 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
             }`}
           >
             <Trophy size={24} />
-            Complete Session
+            Verify & Upload Proof
           </button>
         </div>
     </div>

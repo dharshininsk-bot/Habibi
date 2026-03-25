@@ -35,7 +35,7 @@ const App = () => {
 
   const completedCountForActive = useMemo(() => {
     if (!activePathway) return 0;
-    return history.filter(h => h.pathway === (activePathway.title || activePathway)).length;
+    return history.filter(h => h.pathway === (activePathway.title || activePathway)).reduce((acc, h) => acc + (h.completedSubtasks || 0), 0);
   }, [history, activePathway]);
 
   const currentTask = useMemo(() => 
@@ -163,23 +163,17 @@ const App = () => {
                     onStart={() => setIsDailySpaceOpen(true)}
                   />
                   <RecoveryGraph data={momentumData} />
-                </div>
-                <div className="lg:col-span-4 h-full flex flex-col gap-4">
-                   <div className="lg:col-span-4 sticky top-28 h-fit">
-                   <RightPanelTabs energyLevel={energyLevel} frictionScore={frictionScore} activePathway={activePathway} />
-                </div>     <div className="grid grid-cols-1 gap-4">
-                       <LiveParticipants />
-                       <SelfCompassionTip />
-                     </div>
-                   </div>
-                </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                <div className="lg:col-span-8 space-y-10">
                   <MiniGallery 
                     entries={galleryEntries} 
                     onAdd={() => setIsUploadPromptOpen(true)} 
                   />
+                </div>
+                <div className="lg:col-span-4 sticky top-28 h-fit flex flex-col gap-4">
+                   <RightPanelTabs energyLevel={energyLevel} frictionScore={frictionScore} activePathway={activePathway} />
+                   <div className="grid grid-cols-1 gap-4">
+                     <LiveParticipants />
+                     <SelfCompassionTip />
+                   </div>
                 </div>
               </div>
             </div>

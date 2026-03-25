@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Search, LayoutGrid, Dumbbell, Palette, Code2, ChefHat, Plus } from 'lucide-react';
+import { Search, LayoutGrid, Dumbbell, Palette, Code2, ChefHat, Plus, BarChart3 } from 'lucide-react';
 import PathwayCard from './PathwayCard';
 import { useHabitStore } from '../lib/store';
 
 const CATEGORIES = [
   { id: 'all', name: 'All', icon: LayoutGrid },
+  { id: 'in-progress', name: 'In Progress', icon: BarChart3 },
   { id: 'fitness', name: 'Fitness', icon: Dumbbell },
   { id: 'art', name: 'Art', icon: Palette },
   { id: 'coding', name: 'Coding', icon: Code2 },
@@ -12,12 +13,21 @@ const CATEGORIES = [
 ];
 
 const DiscoveryFeed = ({ onPathwaySelect, onCreateNew }) => {
-  const { pathways } = useHabitStore();
+  const { pathways, history } = useHabitStore();
   const [activeCategory, setActiveCategory] = useState('all');
 
-  const filteredPathways = (pathways || []).filter(p => 
-    activeCategory === 'all' || p.category === activeCategory
-  );
+  const filteredPathways = (pathways || []).filter(p => {
+    if (activeCategory === 'in-progress') {
+      // A pathway is in-progress if it appears in history
+      // We check pathway_id (DB), pathwayId (Local), or title matches
+      return history.some(h => 
+        h.pathway_id === p.id || 
+        h.pathwayId === p.id || 
+        h.pathway === p.title
+      );
+    }
+    return activeCategory === 'all' || p.category === activeCategory;
+  });
 
   return (
     <div className="fade-in text-white">

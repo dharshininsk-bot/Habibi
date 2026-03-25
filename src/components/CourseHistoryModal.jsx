@@ -18,8 +18,8 @@ const CourseHistoryModal = ({ isOpen, onClose, activePathway }) => {
   // Since we record the 'starting' module in taskTitle, we check that.
   const completedModuleTitles = filteredHistory.map(h => h.taskTitle);
   
-  // Total progress - each session in history counts as one module completed in the syllabus/pathway
-  const totalSubtasksCompleted = filteredHistory.length;
+  // Total progress - sum of subtasks completed across all sessions for this pathway
+  const totalSubtasksCompleted = filteredHistory.reduce((acc, h) => acc + (h.completedSubtasks || 0), 0);
   const totalChecklistItems = checklistItems.length;
 
   return (

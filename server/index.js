@@ -11,6 +11,12 @@ const JWT_SECRET = 'habibi_super_secret_jwt_key_2026';
 app.use(cors());
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
 // Middleware to verify JWT
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -98,6 +104,72 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
   res.json({ user });
 });
 
-app.listen(PORT, () => {
-  console.log(`Habibi Backend Server running on http://localhost:${PORT}`);
+// --- Pathways ---
+app.get('/api/pathways', authenticateToken, (req, res) => {
+  const pathways = db.prepare(`
+    SELECT * FROM pathways 
+    WHERE is_private = 0 OR creator_id = ?
+    ORDER BY created_at DESC
+  `).all(req.user.id);
+  
+  const parsed = pathways.map(p => ({
+    ...p,
+    subtopics: JSON.parse(p.subtopics),
+    isPrivate: p.is_private === 1
+  }));
+  res.json(parsed);
+});
+
+app.post('/api/pathways', authenticateToken, (req, res) => {
+  const { title, category, subtopics, isPrivate } = req.body;
+  const insert = db.prepare(`
+    INSERT INTO pathways (creator_id, title, category, subtopics, is_private)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  const info = insert.run(req.user.id, title, category, JSON.stringify(subtopics), isPrivate ? 1 : 0);
+  res.status(201).json({ id: info.lastInsertRowid });
+});
+
+// --- History (Sessions) ---
+app.get('/api/history', authenticateToken, (req, res) => {
+  const sessions = db.prepare(`
+    SELECT s.*, p.title as pathway_title 
+    FROM sessions s
+    LEFT JOIN pathways p ON s.pathway_id = p.id
+    WHERE s.user_id = ? 
+    ORDER BY s.created_at DESC
+  `).all(req.user.id);
+  res.json(sessions);
+});
+
+app.post('/api/history', authenticateToken, (req, res) => {
+  const { pathwayId, taskTitle, duration, completedSubtasks, type, speed } = req.body;
+  const insert = db.prepare(`
+    INSERT INTO sessions (user_id, pathway_id, task_title, duration, completed_subtasks, type, speed)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  const info = insert.run(req.user.id, pathwayId, taskTitle, duration, completedSubtasks, type, speed);
+  res.status(201).json({ id: info.lastInsertRowid });
+});
+
+// --- Gallery ---
+app.get('/api/gallery', authenticateToken, (req, res) => {
+  const items = db.prepare(`
+    SELECT * FROM gallery WHERE user_id = ? ORDER BY created_at DESC
+  `).all(req.user.id);
+  res.json(items);
+});
+
+app.post('/api/gallery', authenticateToken, (req, res) => {
+  const { sessionId, imageUrl, caption } = req.body;
+  const insert = db.prepare(`
+    INSERT INTO gallery (user_id, session_id, image_url, caption)
+    VALUES (?, ?, ?, ?)
+  `);
+  const info = insert.run(req.user.id, sessionId, imageUrl, caption);
+  res.status(201).json({ id: info.lastInsertRowid });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Habibi Backend Server running on http://127.0.0.1:${PORT}`);
 });
