@@ -1,0 +1,111 @@
+import React, { useState, useMemo } from 'react';
+import DiscoveryFeed from './components/DiscoveryFeed';
+import DailyFocusCard from './components/DailyFocusCard';
+import EmpathyBuddy from './components/EmpathyBuddy';
+import RecoveryGraph from './components/RecoveryGraph';
+import MiniGallery from './components/MiniGallery';
+import FloatingActionButton from './components/FloatingActionButton'; // Kept as fall-back or removed depending on feel
+import PathwayBuilderModal from './components/PathwayBuilderModal';
+import { calculateDailyTask, calculateFrictionScore } from './lib/habitEngine';
+import './index.css';
+
+const App = () => {
+  const [activePathway, setActivePathway] = useState(null);
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [energyLevel, setEnergyLevel] = useState(80);
+  const [frictionData, setFrictionData] = useState({ inactivity: 1, skips: 2, incomplete: 1 });
+
+  const frictionScore = useMemo(() => 
+    calculateFrictionScore(frictionData.inactivity, frictionData.skips, frictionData.incomplete),
+    [frictionData]
+  );
+
+  const currentTask = useMemo(() => 
+    calculateDailyTask(frictionScore, energyLevel, 3), 
+    [frictionScore, energyLevel]
+  );
+
+  const momentumData = [
+    { date: 'Mon', momentum: 40, collective: 60 },
+    { date: 'Tue', momentum: 45, collective: 62 },
+    { date: 'Wed', momentum: 55, collective: 65 },
+    { date: 'Thu', momentum: 70, collective: 68 },
+    { date: 'Fri', momentum: 85, collective: 70 },
+    { date: 'Sat', momentum: 75, collective: 72 },
+    { date: 'Sun', momentum: 90, collective: 75, isRecovering: true },
+  ];
+
+  const galleryEntries = [
+    { day: 1, energy: 90, level: 3, imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=400&auto=format&fit=crop' },
+    { day: 2, energy: 85, level: 2, imageUrl: 'https://images.unsplash.com/photo-1460518451285-cd7ba71ba4c8?q=80&w=400&auto=format&fit=crop' },
+    { day: 5, energy: 70, level: 2, imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop' },
+    { day: 6, energy: 95, level: 3, imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=400&auto=format&fit=crop' },
+  ];
+
+  return (
+    <div className="midnight-gradient min-h-screen text-white font-inter">
+      <div className="max-w-5xl mx-auto px-6 w-full flex flex-col min-h-screen">
+        
+        {/* Nav: Ultra-Premium Minimalist */}
+        <nav className="flex items-center justify-between py-10 mb-8 border-b border-white/5">
+          <div 
+            className="flex items-center gap-3 cursor-pointer group" 
+            onClick={() => setActivePathway(null)}
+          >
+            <div className="w-10 h-10 rounded-2xl bg-white text-slate-950 flex items-center justify-center font-black text-xl shadow-[0_0_40px_rgba(255,255,255,0.3)] group-hover:scale-105 transition-transform duration-500">H</div>
+            <span className="font-sora font-extrabold text-2xl tracking-tighter">Habibi</span>
+          </div>
+
+          <div className="flex items-center gap-8">
+            <div className="hidden sm:flex flex-col items-end gap-1.5 px-5 py-2.5 glass rounded-2xl border-white/5 backdrop-blur-3xl">
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Energy Flow</span>
+              <div className="flex gap-4 items-center">
+                <input 
+                  type="range" min="1" max="100" value={energyLevel} 
+                  onChange={(e) => setEnergyLevel(parseInt(e.target.value))}
+                  className="w-24 h-0.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white" 
+                />
+                <span className="text-xs font-black text-white w-8">{energyLevel}%</span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-full glass border-white/10 flex items-center justify-center font-bold text-[10px] text-white/40 shadow-inner">UA</div>
+          </div>
+        </nav>
+
+        <main className="flex-1 pb-32">
+          {!activePathway ? (
+            <DiscoveryFeed 
+              onPathwaySelect={setActivePathway} 
+              onCreateNew={() => setIsBuilderOpen(true)}
+            />
+          ) : (
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+              <DailyFocusCard 
+                task={currentTask}
+                energyLevel={energyLevel}
+                frictionScore={frictionScore}
+                activePathway={activePathway}
+                onStart={() => alert("Session Ignited!")}
+              />
+              
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div className="lg:col-span-8 space-y-10">
+                  <RecoveryGraph data={momentumData} />
+                  <MiniGallery entries={galleryEntries} />
+                </div>
+
+                <div className="lg:col-span-4 sticky top-28 h-fit">
+                   <EmpathyBuddy energyLevel={energyLevel} frictionScore={frictionScore} />
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      <PathwayBuilderModal isOpen={isBuilderOpen} onClose={() => setIsBuilderOpen(false)} />
+    </div>
+  );
+};
+
+export default App;
