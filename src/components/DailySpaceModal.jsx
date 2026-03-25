@@ -5,7 +5,7 @@ import { useHabitStore } from '../lib/store';
 
 const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, task, onFinish, energyLevel = 50 }) => {
   const [completedBeads, setCompletedBeads] = useState([]);
-  const { addSessionToHistory } = useHabitStore();
+  const { addSessionToHistory, history } = useHabitStore();
 
   const speed = energyLevel < 35 ? 1 : energyLevel < 75 ? 2 : 3;
 
@@ -13,8 +13,15 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
 
   const isHighFriction = frictionScore >= 7;
 
-  // Use the refined parseModuleTasks with activePathway and sessionDuration
-  const beads = parseModuleTasks(task?.title || 'Daily Session', isHighFriction, activePathway, task?.duration || 30);
+  // Use the refined parseModuleTasks with activePathway and speed-scaled capacity
+  const completedCount = history.filter(h => h.pathway === (activePathway?.title || activePathway)).reduce((acc, h) => acc + (h.completedSubtasks || 0), 0);
+  const beads = parseModuleTasks(
+    task?.moduleTitle || task?.title || 'Daily Session', 
+    isHighFriction, 
+    activePathway, 
+    (task?.duration || 30) * speed, // Scale capacity with speed!
+    completedCount
+  );
   const taskCount = beads.length;
   
   // Calculate completion percentage manually

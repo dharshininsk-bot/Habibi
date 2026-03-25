@@ -12,6 +12,7 @@ import SelfCompassionTip from './components/SelfCompassionTip';
 import DailySpaceDashboard from './components/DailySpaceModal';
 import UploadPromptModal from './components/UploadPromptModal';
 import CourseHistoryModal from './components/CourseHistoryModal';
+import AuthPage from './components/AuthPage';
 import { calculateDailyTask, calculateFrictionScore } from './lib/habitEngine';
 import { useHabitStore } from './lib/store';
 import './index.css';
@@ -25,7 +26,7 @@ const App = () => {
   const [energyLevel, setEnergyLevel] = useState(80);
   const [frictionData, setFrictionData] = useState({ inactivity: 1, skips: 2, incomplete: 1 });
 
-  const { history, galleryEntries } = useHabitStore();
+  const { history, galleryEntries, user, authLoading, logout } = useHabitStore();
 
   const frictionScore = useMemo(() => 
     calculateFrictionScore(frictionData.inactivity, frictionData.skips, frictionData.incomplete),
@@ -34,7 +35,7 @@ const App = () => {
 
   const completedCountForActive = useMemo(() => {
     if (!activePathway) return 0;
-    return history.filter(h => h.pathway === activePathway.title).length;
+    return history.filter(h => h.pathway === (activePathway.title || activePathway)).length;
   }, [history, activePathway]);
 
   const currentTask = useMemo(() => 
@@ -78,7 +79,13 @@ const App = () => {
     });
   }, [history]);
 
+  if (authLoading) {
+    return <div className="min-h-screen midnight-gradient flex items-center justify-center text-white font-sora font-bold text-2xl fade-in animate-pulse duration-1000">Loading Habibi...</div>;
+  }
 
+  if (!user) {
+    return <AuthPage />;
+  }
 
   if (isDailySpaceOpen) {
     return (
@@ -118,6 +125,12 @@ const App = () => {
           </div>
 
           <div className="flex items-center gap-6">
+            <button 
+              onClick={logout}
+              className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-[inset_0_0_10px_rgba(244,63,94,0.1)] border border-rose-500/20"
+            >
+              Log Out
+            </button>
             {activePathway && (
               <button 
                 onClick={() => setIsHistoryOpen(true)}

@@ -16,8 +16,7 @@ export const HabitProvider = ({ children }) => {
 
   const [activeUsers, setActiveUsers] = useState([
     { id: 1, name: "Alice", avatar: "https://i.pravatar.cc/100?u=16" },
-    { id: 2, name: "Bob", avatar: "https://i.pravatar.cc/100?u=17" },
-    { id: 3, name: "Charlie", avatar: "https://i.pravatar.cc/100?u=18" }
+    { id: 2, name: "Bob", avatar: "https://i.pravatar.cc/100?u=17" }
   ]);
 
   const [pathways, setPathways] = useState([
@@ -133,6 +132,61 @@ export const HabitProvider = ({ children }) => {
     }
   }, [learningSpeed, badges]);
 
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('habibi_token');
+    if (token) {
+      fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Invalid token');
+        return res.json();
+      })
+      .then(data => setUser(data.user))
+      .catch(() => {
+        localStorage.removeItem('habibi_token');
+        setUser(null);
+      })
+      .finally(() => setAuthLoading(false));
+    } else {
+      setAuthLoading(false);
+    }
+  }, []);
+
+  const login = async (username, password) => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    
+    localStorage.setItem('habibi_token', data.token);
+    setUser(data.user);
+  };
+
+  const register = async (username, password) => {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+    
+    localStorage.setItem('habibi_token', data.token);
+    setUser(data.user);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('habibi_token');
+    setUser(null);
+  };
+
   const value = useMemo(() => ({
     history,
     badges,
@@ -143,8 +197,13 @@ export const HabitProvider = ({ children }) => {
     pathways,
     addPathway: (newPathway) => setPathways(prev => [...prev, { id: Date.now(), ...newPathway }]),
     galleryEntries,
-    addGalleryEntry
-  }), [history, badges, learningSpeed, recoverySpeed, activeUsers, pathways, galleryEntries]);
+    addGalleryEntry,
+    user,
+    authLoading,
+    login,
+    register,
+    logout
+  }), [history, badges, learningSpeed, recoverySpeed, activeUsers, pathways, galleryEntries, user, authLoading]);
 
   return (
     <HabitContext.Provider value={value}>
