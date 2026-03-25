@@ -6,6 +6,8 @@ import RecoveryGraph from './components/RecoveryGraph';
 import MiniGallery from './components/MiniGallery';
 import FloatingActionButton from './components/FloatingActionButton'; // Kept as fall-back or removed depending on feel
 import PathwayBuilderModal from './components/PathwayBuilderModal';
+import LiveParticipants from './components/LiveParticipants';
+import SelfCompassionTip from './components/SelfCompassionTip';
 import { calculateDailyTask, calculateFrictionScore } from './lib/habitEngine';
 import './index.css';
 
@@ -57,17 +59,6 @@ const App = () => {
           </div>
 
           <div className="flex items-center gap-8">
-            <div className="hidden sm:flex flex-col items-end gap-1.5 px-5 py-2.5 glass rounded-2xl border-white/5 backdrop-blur-3xl">
-              <span className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em]">Energy Flow</span>
-              <div className="flex gap-4 items-center">
-                <input 
-                  type="range" min="1" max="100" value={energyLevel} 
-                  onChange={(e) => setEnergyLevel(parseInt(e.target.value))}
-                  className="w-24 h-0.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white" 
-                />
-                <span className="text-xs font-black text-white w-8">{energyLevel}%</span>
-              </div>
-            </div>
             <div className="w-10 h-10 rounded-full glass border-white/10 flex items-center justify-center font-bold text-[10px] text-white/40 shadow-inner">UA</div>
           </div>
         </nav>
@@ -80,22 +71,32 @@ const App = () => {
             />
           ) : (
             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <DailyFocusCard 
-                task={currentTask}
-                energyLevel={energyLevel}
-                frictionScore={frictionScore}
-                activePathway={activePathway}
-                onStart={() => alert("Session Ignited!")}
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div className="lg:col-span-8 space-y-10">
+                  <DailyFocusCard 
+                    task={currentTask}
+                    energyLevel={energyLevel}
+                    frictionScore={frictionScore}
+                    activePathway={activePathway}
+                    onEnergyChange={setEnergyLevel}
+                    onStart={() => alert("Session Ignited!")}
+                  />
+                  <RecoveryGraph data={momentumData} />
+                </div>
+                <div className="lg:col-span-4 h-full flex flex-col gap-4">
+                   <div className="space-y-4">
+                     <EmpathyBuddy energyLevel={energyLevel} frictionScore={frictionScore} />
+                     <div className="grid grid-cols-1 gap-4">
+                       <LiveParticipants />
+                       <SelfCompassionTip />
+                     </div>
+                   </div>
+                </div>
+              </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-8 space-y-10">
-                  <RecoveryGraph data={momentumData} />
                   <MiniGallery entries={galleryEntries} />
-                </div>
-
-                <div className="lg:col-span-4 sticky top-28 h-fit">
-                   <EmpathyBuddy energyLevel={energyLevel} frictionScore={frictionScore} />
                 </div>
               </div>
             </div>

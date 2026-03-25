@@ -6,25 +6,22 @@ export const TASK_LEVELS = {
   SPARK: {
     level: 1,
     id: 'SPARK',
-    title: "The Spark",
-    duration: 10,
-    color: "#60a5fa", // Blue
+    title: "Spark",
+    color: "#22c55e", // Green
     description: "Keep the flame alive with a tiny win."
   },
-  FLOW: {
+  FLAME: {
     level: 2,
-    id: 'FLOW',
-    title: "The Flow",
-    duration: 30,
-    color: "#fb923c", // Orange
+    id: 'FLAME',
+    title: "Flame",
+    color: "#eab308", // Yellow
     description: "A steady session for consistent progress."
   },
-  DEEP_DIVE: {
+  EMBER: {
     level: 3,
-    id: 'DEEP_DIVE',
-    title: "The Deep Dive",
-    duration: 60,
-    color: "#a855f7", // Purple
+    id: 'EMBER',
+    title: "Ember",
+    color: "#ef4444", // Red
     description: "Full focus for peak energy and momentum."
   }
 };
@@ -38,53 +35,47 @@ export function calculateFrictionScore(inactivityDays, skips, incompleteSessions
 }
 
 /**
- * Logic to adjust task complexity
+ * Logic to adjust task complexity based on energy level
  */
 export function calculateDailyTask(frictionScore, energyLevel, pathwayDifficulty = 2) {
-  // If Friction is > 5, always force a Level 1 Spark to prevent quitting
+  // Determine Task Base (Title & Color) based on Energy Level
+  let taskBase;
+  if (energyLevel <= 30) {
+    taskBase = TASK_LEVELS.SPARK;
+  } else if (energyLevel < 75) {
+    taskBase = TASK_LEVELS.FLAME;
+  } else {
+    taskBase = TASK_LEVELS.EMBER;
+  }
+
+  // Determine Duration based on Energy Level
+  let duration;
+  if (energyLevel <= 30) {
+    duration = 10;
+  } else if (energyLevel <= 60) {
+    duration = 30;
+  } else if (energyLevel <= 90) {
+    duration = 60;
+  } else {
+    duration = 90;
+  }
+
+  // Reasoning logic
+  let reasoning = "";
   if (frictionScore > 5) {
-    return {
-      ...TASK_LEVELS.SPARK,
-      reasoning: "I can see this module has been a blocker. Let's just do 10 minutes to keep the flame alive."
-    };
+    reasoning = "I can see this module has been a blocker. Let's start with a small spark to rebuild your rhythm.";
+  } else if (energyLevel <= 30) {
+    reasoning = "Your energy is low today. A quick spark is all you need to stay consistent.";
+  } else if (energyLevel < 75) {
+    reasoning = "You're in a good rhythm. This flame will keep your momentum building.";
+  } else {
+    reasoning = "Energy is high and your rhythm is clear. Let's turn This Ember into a blaze!";
   }
 
-  // If energy is low, give a Spark
-  if (energyLevel < 35) {
-    return {
-      ...TASK_LEVELS.SPARK,
-      reasoning: "Your energy is low today. Taking it easy is okay, but let's do a tiny bit to stay consistent."
-    };
-  }
-
-  // Moderate energy
-  if (energyLevel >= 35 && energyLevel <= 75) {
-    // If it's a hard pathway and there's some friction, downgrade to Spark
-    if (pathwayDifficulty === 3 && frictionScore > 3) {
-      return {
-        ...TASK_LEVELS.SPARK,
-        reasoning: "This topic is challenging. Let's stick to a small win today."
-      };
-    }
-
-    return {
-      ...TASK_LEVELS.FLOW,
-      reasoning: "You're in a good rhythm. Ready for a standard session?"
-    };
-  }
-
-  // Peak state: High energy AND Low friction
-  if (energyLevel > 75 && frictionScore <= 2) {
-    return {
-      ...TASK_LEVELS.DEEP_DIVE,
-      reasoning: "Energy is high and your rhythm is clear. It's time for a Deep Dive."
-    };
-  }
-
-  // Fallback to flow
   return {
-    ...TASK_LEVELS.FLOW,
-    reasoning: "Let's keep the momentum going with a solid session."
+    ...taskBase,
+    duration,
+    reasoning
   };
 }
 
