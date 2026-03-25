@@ -16,7 +16,10 @@ const INITIAL_PATHWAYS = [
     subtopics: [
       { title: 'Workspace Setup', duration: 15 },
       { title: 'Unity Interface', duration: 30 },
-      { title: 'Your First Script', duration: 45 }
+      { title: 'Your First Script', duration: 45 },
+      { title: 'Physics & Collisions', duration: 40 },
+      { title: 'Building the Scene', duration: 50 },
+      { title: 'Publishing Game', duration: 60 }
     ]
   },
   {
@@ -44,7 +47,14 @@ const INITIAL_PATHWAYS = [
     enrolled: '25k',
     difficulty: 'Advanced',
     thumbnail: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop',
-    isPrivate: false
+    isPrivate: false,
+    subtopics: [
+      { title: 'Form & Technique', duration: 20 },
+      { title: 'Core Stabilization', duration: 15 },
+      { title: 'Upper Body Strength', duration: 30 },
+      { title: 'Lower Body Power', duration: 35 },
+      { title: 'Advanced Movements', duration: 45 }
+    ]
   },
   {
     id: 'sourdough',
@@ -55,7 +65,14 @@ const INITIAL_PATHWAYS = [
     enrolled: '8k',
     difficulty: 'Beginner',
     thumbnail: 'https://images.unsplash.com/photo-1585478259715-876a6a81fc08?q=80&w=800&auto=format&fit=crop',
-    isPrivate: false
+    isPrivate: false,
+    subtopics: [
+      { title: 'Starter Maintenance', duration: 15 },
+      { title: 'Mixing & Autolyse', duration: 25 },
+      { title: 'Stretch & Fold', duration: 45 },
+      { title: 'Shaping Techniques', duration: 30 },
+      { title: 'Baking the Loaf', duration: 60 }
+    ]
   },
   {
     id: 'ui-motion',
@@ -77,7 +94,14 @@ const INITIAL_PATHWAYS = [
     enrolled: '15k',
     difficulty: 'Beginner',
     thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop',
-    isPrivate: false
+    isPrivate: false,
+    subtopics: [
+      { title: 'Python Basics', duration: 30 },
+      { title: 'Pandas DataFrames', duration: 45 },
+      { title: 'Data Cleaning', duration: 40 },
+      { title: 'Data Visualization', duration: 50 },
+      { title: 'Intro to Machine Learning', duration: 60 }
+    ]
   }
 ];
 
@@ -114,29 +138,32 @@ export const HabitProvider = ({ children }) => {
         fetch('/api/gallery', { headers })
       ]);
 
+      let mergedPathways = [...INITIAL_PATHWAYS];
       if (pathwaysRes.ok) {
         const dbPathways = await pathwaysRes.json();
         // Merge mocks and DB pathways, filtering out duplicates by title or ID
-        const merged = [...INITIAL_PATHWAYS];
         dbPathways.forEach(p => {
-          if (!merged.find(m => m.id === p.id || m.title === p.title)) {
-            merged.unshift(p); // Put user pathways at the top
+          if (!mergedPathways.find(m => m.id === p.id || m.title === p.title)) {
+            mergedPathways.unshift(p); // Put user pathways at the top
           }
         });
-        setPathways(merged);
+        setPathways(mergedPathways);
       }
 
       if (historyRes.ok) {
         const dbHistory = await historyRes.json();
-        const mapped = dbHistory.map(h => ({
-          id: h.id,
-          date: new Date(h.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          pathway: h.pathway_title || 'General',
-          taskTitle: h.task_title,
-          timeSpent: h.duration,
-          completedSubtasks: h.completed_subtasks,
-          type: h.type || 'ember'
-        }));
+        const mapped = dbHistory.map(h => {
+          const matchedPath = mergedPathways.find(p => p.id === h.pathway_id || String(p.id) === String(h.pathway_id));
+          return {
+            id: h.id,
+            date: new Date(h.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            pathway: h.pathway_title || matchedPath?.title || 'General',
+            taskTitle: h.task_title,
+            timeSpent: h.duration,
+            completedSubtasks: h.completed_subtasks,
+            type: h.type || 'ember'
+          };
+        });
         setHistory(mapped);
       }
       if (galleryRes.ok) setGalleryEntries(await galleryRes.json());
