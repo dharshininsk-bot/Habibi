@@ -97,14 +97,18 @@ const App = () => {
           energyLevel={energyLevel}
           activePathway={activePathway} 
           task={currentTask}
-          onFinish={() => {
+          onFinish={(isIncomplete) => {
             setIsDailySpaceOpen(false);
             setIsUploadPromptOpen(true);
+            if (isIncomplete) {
+              setFrictionData(prev => ({ ...prev, incomplete: prev.incomplete + 1 }));
+            }
           }}
         />
         <UploadPromptModal 
           isOpen={isUploadPromptOpen} 
           onClose={() => setIsUploadPromptOpen(false)} 
+          currentTask={currentTask}
         />
       </React.Fragment>
     );
@@ -164,14 +168,14 @@ const App = () => {
                   />
                   <RecoveryGraph data={momentumData} />
                   <MiniGallery 
-                    entries={galleryEntries} 
+                    entries={galleryEntries.filter(e => e.task_title === currentTask?.moduleTitle)} 
                     onAdd={() => setIsUploadPromptOpen(true)} 
                   />
                 </div>
                 <div className="lg:col-span-4 sticky top-28 h-fit flex flex-col gap-4">
-                   <RightPanelTabs energyLevel={energyLevel} frictionScore={frictionScore} activePathway={activePathway} />
+                   <RightPanelTabs energyLevel={energyLevel} frictionScore={frictionScore} activePathway={activePathway} currentTask={currentTask} />
                    <div className="grid grid-cols-1 gap-4">
-                     <LiveParticipants />
+                     <LiveParticipants currentTask={currentTask} />
                      <SelfCompassionTip />
                    </div>
                 </div>

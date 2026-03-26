@@ -3,7 +3,7 @@ import EmpathyBuddy from './EmpathyBuddy';
 import LiveChat from './LiveChat';
 import { MessageSquare, Sparkles } from 'lucide-react';
 
-const RightPanelTabs = ({ energyLevel, frictionScore, activePathway }) => {
+const RightPanelTabs = ({ energyLevel, frictionScore, activePathway, currentTask }) => {
   const [activeTab, setActiveTab] = useState('aura');
 
   return (
@@ -27,7 +27,7 @@ const RightPanelTabs = ({ energyLevel, frictionScore, activePathway }) => {
       {activeTab === 'aura' ? (
         <EmpathyBuddy energyLevel={energyLevel} frictionScore={frictionScore} />
       ) : (
-        <LiveChat activePathway={activePathway} />
+        <LiveChat activePathway={activePathway} currentTask={currentTask} />
       )}
     </div>
   );

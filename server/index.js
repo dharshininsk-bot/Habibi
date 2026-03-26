@@ -155,19 +155,95 @@ app.post('/api/history', authenticateToken, (req, res) => {
 // --- Gallery ---
 app.get('/api/gallery', authenticateToken, (req, res) => {
   const items = db.prepare(`
-    SELECT * FROM gallery WHERE user_id = ? ORDER BY created_at DESC
+    SELECT g.*, s.task_title 
+    FROM gallery g
+    LEFT JOIN sessions s ON g.session_id = s.id
+    WHERE g.user_id = ? 
+    ORDER BY g.created_at DESC
   `).all(req.user.id);
   res.json(items);
 });
 
 app.post('/api/gallery', authenticateToken, (req, res) => {
   const { sessionId, imageUrl, caption } = req.body;
+  
+  let finalSessionId = sessionId;
+  if (!finalSessionId) {
+    const latest = db.prepare('SELECT id FROM sessions WHERE user_id = ? ORDER BY created_at DESC LIMIT 1').get(req.user.id);
+    if (latest) finalSessionId = latest.id;
+  }
+
   const insert = db.prepare(`
     INSERT INTO gallery (user_id, session_id, image_url, caption)
     VALUES (?, ?, ?, ?)
   `);
-  const info = insert.run(req.user.id, sessionId, imageUrl, caption);
+  const info = insert.run(req.user.id, finalSessionId, imageUrl, caption);
   res.status(201).json({ id: info.lastInsertRowid });
+});
+
+// --- Live Chat (SSE & REST) ---
+let chatClients = [];
+
+// Endpoint to establish SSE connection
+app.get('/api/chat/stream', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders(); // Ensure headers are sent immediately
+
+  const moduleTitle = req.query.module;
+  const client = { id: Date.now(), res, moduleTitle };
+  chatClients.push(client);
+
+  req.on('close', () => {
+    chatClients = chatClients.filter(c => c.id !== client.id);
+  });
+});
+
+// Endpoint to get recent messages for a module
+app.get('/api/chat/:moduleName', authenticateToken, (req, res) => {
+  const { moduleName } = req.params;
+  const messages = db.prepare(`
+    SELECT c.*, u.username as sender
+    FROM chat_messages c
+    JOIN users u ON c.user_id = u.id
+    WHERE c.module_title = ?
+    ORDER BY c.created_at ASC
+  `).all(moduleName);
+  res.json(messages);
+});
+
+// Endpoint to post a new message
+app.post('/api/chat/:moduleName', authenticateToken, (req, res) => {
+  const { moduleName } = req.params;
+  const { text } = req.body;
+  
+  if (!text) return res.status(400).json({ error: 'Message text is required' });
+
+  // Save to DB
+  const insert = db.prepare(`
+    INSERT INTO chat_messages (user_id, module_title, text)
+    VALUES (?, ?, ?)
+  `);
+  const info = insert.run(req.user.id, moduleName, text);
+
+  const newMessage = {
+    id: info.lastInsertRowid,
+    user_id: req.user.id,
+    sender: req.user.username,
+    module_title: moduleName,
+    text,
+    created_at: new Date().toISOString()
+  };
+
+  // Broadcast to all active clients connected to this module
+  chatClients.forEach(c => {
+    if (c.moduleTitle === moduleName) {
+      c.res.write(`data: ${JSON.stringify(newMessage)}\n\n`);
+    }
+  });
+
+  res.status(201).json(newMessage);
 });
 
 app.listen(PORT, '0.0.0.0', () => {

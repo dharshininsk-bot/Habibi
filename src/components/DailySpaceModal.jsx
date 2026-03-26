@@ -128,7 +128,7 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
         </div>
 
         {/* Footer / Completion */}
-        <div className="w-full p-8 border-t border-white/5 bg-white/[0.01] flex justify-center mt-auto">
+        <div className="w-full p-8 border-t border-white/5 bg-white/[0.01] flex flex-col items-center gap-4 mt-auto">
           <button 
             onClick={() => {
               addSessionToHistory({
@@ -141,18 +141,33 @@ const DailySpaceDashboard = ({ isOpen, onClose, frictionScore, activePathway, ta
                 type: task?.id?.toLowerCase() || 'flame',
                 speed: speed
               });
-              onFinish();
+              onFinish(progress < 100);
             }}
-            disabled={progress < 100}
+            disabled={completedBeads.length === 0}
             className={`px-12 py-5 rounded-2xl font-black text-xl uppercase tracking-widest flex items-center gap-3 transition-all ${
-              progress >= 100 
+              completedBeads.length > 0
               ? 'bg-white text-slate-950 hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.3)]' 
               : 'bg-white/5 text-white/20 cursor-not-allowed'
             }`}
           >
-            <Trophy size={24} />
-            Verify & Upload Proof
+            {progress >= 100 ? (
+              <>
+                <Trophy size={24} />
+                Verify & Upload Proof
+              </>
+            ) : (
+              <>
+                <FastForward size={24} />
+                Save Partial Progress
+              </>
+            )}
           </button>
+          
+          {progress < 100 && completedBeads.length > 0 && (
+            <p className="text-xs text-rose-400 font-bold tracking-wider opacity-80">
+              Note: Exiting early will increase your friction score.
+            </p>
+          )}
         </div>
     </div>
   );

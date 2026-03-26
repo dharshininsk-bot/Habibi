@@ -18,9 +18,9 @@ const MiniGallery = ({ entries, onAdd }) => {
             className="tapestry-item w-40 aspect-[4/5] glass rounded-3xl border-white/5 p-1.5 relative group cursor-pointer hover:border-white/20 transition-all"
           >
             <div className="w-full h-full rounded-2xl overflow-hidden relative">
-              {entry.imageUrl ? (
+              {(entry.imageUrl || entry.image_url) ? (
                 <img 
-                  src={entry.imageUrl} 
+                  src={entry.imageUrl || entry.image_url} 
                   alt="Progress" 
                   className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
                 />

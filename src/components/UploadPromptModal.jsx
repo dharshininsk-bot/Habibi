@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Camera, Image as ImageIcon, X, Upload } from 'lucide-react';
 import { useHabitStore } from '../lib/store';
 
-const UploadPromptModal = ({ isOpen, onClose }) => {
+const UploadPromptModal = ({ isOpen, onClose, currentTask }) => {
   const [dragActive, setDragActive] = useState(false);
   const { addGalleryEntry } = useHabitStore();
   const fileInputRef = useRef(null);
@@ -11,9 +11,12 @@ const UploadPromptModal = ({ isOpen, onClose }) => {
 
   const handleFile = (file) => {
     if (file && file.type.startsWith('image/')) {
-      const imageUrl = URL.createObjectURL(file);
-      addGalleryEntry({ energy: 100, level: 3, imageUrl });
-      onClose();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        addGalleryEntry({ energy: 100, level: 3, imageUrl: reader.result, task_title: currentTask?.moduleTitle });
+        onClose();
+      };
+      reader.readAsDataURL(file);
     }
   };
 

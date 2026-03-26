@@ -57,4 +57,16 @@ db.prepare(`
   )
 `).run();
 
+// Chat messages table for Live Squad
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS chat_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    module_title TEXT NOT NULL,
+    text TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+  )
+`).run();
+
 export default db;

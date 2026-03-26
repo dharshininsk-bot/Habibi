@@ -11,7 +11,7 @@ const INITIAL_PATHWAYS = [
     activeCount: 450,
     enrolled: '12.4k',
     difficulty: 'Intermediate',
-    thumbnail: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800&auto=format&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=800&auto=format&fit=crop',
     isPrivate: false,
     subtopics: [
       { title: 'Workspace Setup', duration: 15 },
@@ -144,6 +144,10 @@ export const HabitProvider = ({ children }) => {
         // Merge mocks and DB pathways, filtering out duplicates by title or ID
         dbPathways.forEach(p => {
           if (!mergedPathways.find(m => m.id === p.id || m.title === p.title)) {
+            // Hotfix: Inject image for dynamic pathway 'Programming in C'
+            if (p.title.toLowerCase().includes('programming in c')) {
+              p.thumbnail = 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=800&auto=format&fit=crop';
+            }
             mergedPathways.unshift(p); // Put user pathways at the top
           }
         });

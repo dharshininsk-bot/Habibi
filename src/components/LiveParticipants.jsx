@@ -1,17 +1,17 @@
 import React from 'react';
 import { Users } from 'lucide-react';
 
-const LiveParticipants = ({ count = 21 }) => {
+const LiveParticipants = ({ count = 21, currentTask }) => {
   return (
     <div className="glass bg-white/[0.02] border border-white/5 rounded-3xl p-6 backdrop-blur-md animate-in fade-in slide-in-from-right-4 duration-700">
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]" />
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Live Session</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Live Squad</h3>
           </div>
           <p className="text-[10px] text-slate-500 font-bold italic">
-            +{count} others practicing now
+            +{count} others on {currentTask?.moduleTitle || 'this task'}
           </p>
         </div>
 
